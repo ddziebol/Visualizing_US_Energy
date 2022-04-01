@@ -1,2 +1,2 @@
 # Visualizing_US_Energy
-Collaborative Project with Mark Jokinen on visualizing US energy production in python
+Collaborative Project between Destiny Ziebol and Mark Jokinen on visualizing US energy production in python bith Bokeh. 
