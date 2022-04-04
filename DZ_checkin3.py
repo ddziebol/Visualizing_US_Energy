@@ -25,7 +25,9 @@ df = cleaned_data
 x = pd.to_datetime(cleaned_data.index, format="%b-%y").to_pydatetime()
 y = df['U.S. Heating Degree Days'] #Try out heating days
 
-##First test plot
-# p = figure(plot_height=400, plot_width=800, x_axis_type="datetime")
-# p.line(x, y)
-# show(p)
+#First test plot
+p = figure(plot_height=400, plot_width=800, x_axis_type="datetime")
+circ = p.circle(x,y, radius = 1, selection_color="firebrick", nonselection_color = "white")
+p.line(x, y)
+
+show(p)
