@@ -9,7 +9,7 @@ import pandas as pd
 from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot
-from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select
+from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool
 
 # -----clean and format the data
 
@@ -40,13 +40,23 @@ y = cleaned_data['U.S. Crude Oil Production']
 
 # ----basic plots
 
-plot1 = figure(x_axis_type="datetime", width=900, height=400)
+TOOLTIPS = [
+    ("x: ", "($x)"),
+    ("y: ", "($y"),
+]
+
+plot1 = figure(x_axis_type="datetime", width=900, height=400, tooltips = TOOLTIPS)
 
 plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
+
+plot1.add_tools(BoxSelectTool())
+
 
 plot2 = figure(x_axis_type="datetime", width=900, height=400)
 
 plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
+
+plot2.add_tools((BoxSelectTool()))
 
 plot1.x_range = plot2.x_range  # Links x range of graphs when manipulated by zoom or pan
 
