@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Apr  3 16:44:27 2022
+Created on Sun Apr 10 14:16:55 2022
 
+@author: Mark
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Apr  3 16:44:27 2022
 @author: Mark, Destiny
 """
 
@@ -13,9 +19,10 @@ from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, S
 
 # -----clean and format the data
 
-raw_data = pd.read_csv("US_Energy.csv", delimiter=",")
+raw_data = pd.read_csv("C:/Users/Mark/Documents/Grad School/Winter 2022/CSCI 5609/Project/US_Energy.csv", delimiter=",",na_values=('--'))
 
-cleaned_data = raw_data.drop(['remove', 'units', 'source key', 'category'], axis=1)
+cleaned_data = raw_data.drop([13,15,17,19],axis=0)
+cleaned_data = cleaned_data.drop(['remove', 'units', 'source key', 'category'], axis=1)
 
 cleaned_data = cleaned_data.transpose()
 
@@ -23,9 +30,13 @@ new_header = cleaned_data.iloc[0]  # grab the first row for the header
 cleaned_data = cleaned_data[1:]  # take the data less the header row
 cleaned_data.columns = new_header
 
+for (columnName, columnData) in cleaned_data.iteritems():
+        cleaned_data["Change in "+columnName] = pd.to_numeric(cleaned_data[columnName]).pct_change()
+
 # -----designate and format X and Y
 
-columns = sorted(cleaned_data.columns)
+columns = sorted(cleaned_data.columns[:18])
+columns_change = sorted(cleaned_data.columns[18:])
 
 cleaned_data['active_axis'] = cleaned_data['U.S. Crude Oil Production']
 cleaned_data['Month'] = pd.to_datetime(cleaned_data.index, format="%b-%y")
@@ -92,4 +103,3 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source2, axesSelect=
 
 # ----plot slider
 show(layout([slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2], [plot3]])))
-
