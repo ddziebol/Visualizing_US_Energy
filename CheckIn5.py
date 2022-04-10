@@ -48,17 +48,25 @@ TOOLTIPS = [
 plot1 = figure(x_axis_type="datetime", width=900, height=400, tooltips = TOOLTIPS)
 
 plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
+plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
 
 plot1.add_tools(BoxSelectTool())
 
 
-plot2 = figure(x_axis_type="datetime", width=900, height=400)
+plot2 = figure(x_axis_type="datetime", width=900, height=200, tooltips = TOOLTIPS)
 
-plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
+plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
 
-plot2.add_tools((BoxSelectTool()))
+plot2.add_tools(BoxSelectTool())
 
-plot1.x_range = plot2.x_range  # Links x range of graphs when manipulated by zoom or pan
+
+plot3 = figure(x_axis_type="datetime", width=900, height=200, tooltips = TOOLTIPS)
+
+plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
+
+plot3.add_tools((BoxSelectTool()))
+
+plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
 
 # ----- Create Slider and Selector objects
 slider = DateRangeSlider(title="Date Range: ", start=min(x), end=max(x), step=1, value=(min(x), max(x)))
@@ -68,8 +76,8 @@ axesSelect = Select(title="Y-Axis:", value="U.S. Crude Oil Production", options=
 axesSelect2 = Select(title="Y-Axis2:", value="U.S. Crude Oil Production", options=columns)
 
 # ------link slider to graph
-slider.js_link("value", plot1.x_range, "start", attr_selector=0)
-slider.js_link("value", plot1.x_range, "end", attr_selector=1)
+slider.js_link("value", plot2.x_range, "start", attr_selector=0)
+slider.js_link("value", plot2.x_range, "end", attr_selector=1)
 
 # ------Use JS to change 'active axis' to match selector value
 axesSelect.js_on_change('value', CustomJS(args=dict(source=source, axesSelect=axesSelect), code="""
@@ -83,5 +91,5 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source2, axesSelect=
   """))
 
 # ----plot slider
-show(layout([slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2]])))
+show(layout([slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2], [plot3]])))
 
