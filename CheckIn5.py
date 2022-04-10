@@ -8,7 +8,7 @@ Created on Sun Apr  3 16:44:27 2022
 import pandas as pd
 from bokeh.io import show
 from bokeh.plotting import figure
-from bokeh.layouts import layout
+from bokeh.layouts import layout, column, gridplot
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select
 
 # -----clean and format the data
@@ -40,11 +40,11 @@ y = cleaned_data['U.S. Crude Oil Production']
 
 # ----basic plots
 
-plot1 = figure(x_axis_type="datetime")
+plot1 = figure(x_axis_type="datetime", width=900, height=400)
 
 plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
 
-plot2 = figure(x_axis_type="datetime")
+plot2 = figure(x_axis_type="datetime", width=900, height=400)
 
 plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
 
@@ -73,4 +73,5 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source2, axesSelect=
   """))
 
 # ----plot slider
-show(layout([slider, axesSelect, axesSelect2], [plot1, plot2]))
+show(layout([slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2]])))
+
