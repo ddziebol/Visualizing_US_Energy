@@ -2,7 +2,7 @@
 """
 Created on Sun Apr  3 16:44:27 2022
 
-@author: Mark
+@author: Mark, Destiny
 """
 
 import pandas as pd
@@ -48,7 +48,7 @@ plot2 = figure(x_axis_type="datetime")
 
 plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
 
-plot1.x_range = plot2.x_range
+plot1.x_range = plot2.x_range #Links x range of graphs when manipulated by zoom or pan
 
 # ----- Create Slider and Selector objects
 slider = DateRangeSlider(title="Date Range: ", start=min(x), end=max(x), step=1, value=(min(x), max(x)))
