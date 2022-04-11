@@ -15,11 +15,11 @@ import pandas as pd
 from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot
-from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool
+from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool
 
 # -----clean and format the data
 
-raw_data = pd.read_csv("C:/Users/Mark/Documents/Grad School/Winter 2022/CSCI 5609/Project/US_Energy.csv", delimiter=",",na_values=('--'))
+raw_data = pd.read_csv("US_Energy.csv", delimiter=",",na_values=('--'))
 
 cleaned_data = raw_data.drop([13,15,17,19],axis=0)
 cleaned_data = cleaned_data.drop(['remove', 'units', 'source key', 'category'], axis=1)
@@ -47,37 +47,41 @@ view = CDSView(source=source)
 view2 = CDSView(source=source2)
 
 x = pd.to_datetime(cleaned_data.index, format="%b-%y").to_pydatetime()
-y = cleaned_data['U.S. Crude Oil Production']
+#y = cleaned_data['U.S. Crude Oil Production']
 
 # ----basic plots
 
-TOOLTIPS = [
-    ("x: ", "($x)"),
-    ("y: ", "($y"),
-]
+hover = HoverTool(
+    mode = "vline",
+    tooltips = [
+        ('Date', '@index'),
+        ('y', '@active_axis'),
+    ],
+)
 
-plot1 = figure(x_axis_type="datetime", width=900, height=400, tooltips = TOOLTIPS)
+tools_to_show = [hover, 'box_zoom','pan,save','reset','wheel_zoom']
+
+plot1 = figure(x_axis_type="datetime", width=900, height=400, tools = tools_to_show)
 
 plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
 plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
 
 plot1.add_tools(BoxSelectTool())
 
-
-plot2 = figure(x_axis_type="datetime", width=900, height=200, tooltips = TOOLTIPS)
+plot2 = figure(x_axis_type="datetime", width=900, height=200, tools = tools_to_show)
 
 plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
 
 plot2.add_tools(BoxSelectTool())
 
 
-plot3 = figure(x_axis_type="datetime", width=900, height=200, tooltips = TOOLTIPS)
+plot3 = figure(x_axis_type="datetime", width=900, height=200, tools = tools_to_show)
 
 plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
 
 plot3.add_tools((BoxSelectTool()))
 
-plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
+plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
 
 # ----- Create Slider and Selector objects
 slider = DateRangeSlider(title="Date Range: ", start=min(x), end=max(x), step=1, value=(min(x), max(x)))
