@@ -16,7 +16,7 @@ from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
-    CrosshairTool
+    CrosshairTool, VArea
 
 # -----clean and format the data
 
@@ -46,8 +46,8 @@ source = ColumnDataSource(data=cleaned_data)  # Plot2
 source2 = ColumnDataSource(data=cleaned_data)  # Plot3
 source3 = ColumnDataSource(data=cleaned_data)  # Plot1
 source4 = ColumnDataSource(data=cleaned_data)  # Plot1
-view = CDSView(source=source)
-view2 = CDSView(source=source2)
+view = CDSView(source=source)  # Plot2
+view2 = CDSView(source=source2)  # Plot3
 view3 = CDSView(source=source3)  # Plot1
 view4 = CDSView(source=source3)  # Plot1
 
@@ -72,18 +72,20 @@ box_selector = BoxSelectTool()
 
 tools_to_show = [hover, linked_crosshair, box_selector, 'box_zoom', 'pan,save', 'reset', 'wheel_zoom']
 
-plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show)
+plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show, title="Percent Change", title_location='left')
 
-plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source3, view=view)
-plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source4, view=view2)
+plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source3, view=view, color='orange')
 
-plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show)
+plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source4, view=view2, color='blue')
 
-plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
+plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title="Y1 Raw Values", title_location='left')
+plot2.title.text =
 
-plot3 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show)
+plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view, color='orange')
 
-plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
+plot3 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title="Y2 Raw Values", title_location='left')
+
+plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2,  color='blue')
 
 plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
 
