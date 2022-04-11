@@ -15,13 +15,14 @@ import pandas as pd
 from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot
-from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool
+from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
+    CrosshairTool
 
 # -----clean and format the data
 
-raw_data = pd.read_csv("US_Energy.csv", delimiter=",",na_values=('--'))
+raw_data = pd.read_csv("US_Energy.csv", delimiter=",", na_values=('--'))
 
-cleaned_data = raw_data.drop([13,15,17,19],axis=0)
+cleaned_data = raw_data.drop([13, 15, 17, 19], axis=0)
 cleaned_data = cleaned_data.drop(['remove', 'units', 'source key', 'category'], axis=1)
 
 cleaned_data = cleaned_data.transpose()
@@ -31,55 +32,58 @@ cleaned_data = cleaned_data[1:]  # take the data less the header row
 cleaned_data.columns = new_header
 
 for (columnName, columnData) in cleaned_data.iteritems():
-        cleaned_data["Change in "+columnName] = pd.to_numeric(cleaned_data[columnName]).pct_change()
+    cleaned_data["Change in " + columnName] = pd.to_numeric(cleaned_data[columnName]).pct_change()
 
 # -----designate and format X and Y
 
 columns = sorted(cleaned_data.columns[:18])
 columns_change = sorted(cleaned_data.columns[18:])
 
-cleaned_data['active_axis'] = cleaned_data['U.S. Crude Oil Production']
+cleaned_data['active_axis'] = cleaned_data['U.S. Crude Oil Production'] #This gives all graphs same starting values
 cleaned_data['Month'] = pd.to_datetime(cleaned_data.index, format="%b-%y")
 
-source = ColumnDataSource(data=cleaned_data)
-source2 = ColumnDataSource(data=cleaned_data)
+source = ColumnDataSource(data=cleaned_data)  # Plot2
+source2 = ColumnDataSource(data=cleaned_data)  # Plot3
+source3 = ColumnDataSource(data=cleaned_data)  # Plot1
+source4 = ColumnDataSource(data=cleaned_data)  # Plot1
 view = CDSView(source=source)
 view2 = CDSView(source=source2)
+view3 = CDSView(source=source3)  # Plot1
+view4 = CDSView(source=source3)  # Plot1
 
 x = pd.to_datetime(cleaned_data.index, format="%b-%y").to_pydatetime()
-#y = cleaned_data['U.S. Crude Oil Production']
+source.data['active_axis'] = source.data["U.S. Crude Oil Production"]  # sets appropriate defaults for plot1
+source2.data['active_axis'] = source.data["U.S. Coal Consumption"]
+source3.data['active_axis'] = source.data["Change in U.S. Crude Oil Production"]  # sets appropriate defaults for plot1
+source4.data['active_axis'] = source.data["Change in U.S. Coal Consumption"]
 
 # ----basic plots
 
 hover = HoverTool(
-    mode = "vline",
-    tooltips = [
+    mode="vline",
+    tooltips=[
         ('Date', '@index'),
         ('y', '@active_axis'),
     ],
 )
+linked_crosshair = CrosshairTool(dimensions="height")
 
-tools_to_show = [hover, 'box_zoom','pan,save','reset','wheel_zoom']
+box_selector = BoxSelectTool()
 
-plot1 = figure(x_axis_type="datetime", width=900, height=400, tools = tools_to_show)
+tools_to_show = [hover, linked_crosshair, box_selector, 'box_zoom', 'pan,save', 'reset', 'wheel_zoom']
 
-plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
-plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
+plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show)
 
-plot1.add_tools(BoxSelectTool())
+plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source3, view=view)
+plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source4, view=view2)
 
-plot2 = figure(x_axis_type="datetime", width=900, height=200, tools = tools_to_show)
+plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show)
 
 plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view)
 
-plot2.add_tools(BoxSelectTool())
-
-
-plot3 = figure(x_axis_type="datetime", width=900, height=200, tools = tools_to_show)
+plot3 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show)
 
 plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2)
-
-plot3.add_tools((BoxSelectTool()))
 
 plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
 
@@ -88,7 +92,7 @@ slider = DateRangeSlider(title="Date Range: ", start=min(x), end=max(x), step=1,
 
 axesSelect = Select(title="Y-Axis:", value="U.S. Crude Oil Production", options=columns)
 
-axesSelect2 = Select(title="Y-Axis2:", value="U.S. Crude Oil Production", options=columns)
+axesSelect2 = Select(title="Y-Axis2:", value="U.S. Coal Consumption", options=columns)
 
 # ------link slider to graph
 slider.js_link("value", plot2.x_range, "start", attr_selector=0)
@@ -100,8 +104,18 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source=source, axesSelect=ax
   source.change.emit()
   """))
 
+axesSelect.js_on_change('value', CustomJS(args=dict(source=source3, axesSelect=axesSelect), code="""
+  source.data['active_axis'] = source.data["Change in " + axesSelect.value]
+  source.change.emit()
+  """))
+
 axesSelect2.js_on_change('value', CustomJS(args=dict(source=source2, axesSelect=axesSelect2), code="""
   source.data['active_axis'] = source.data[axesSelect.value]
+  source.change.emit()
+  """))
+
+axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=axesSelect2), code="""
+  source.data['active_axis'] = source.data["Change in " + axesSelect.value]
   source.change.emit()
   """))
 
