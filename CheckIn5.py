@@ -2,13 +2,7 @@
 """
 Created on Sun Apr 10 14:16:55 2022
 
-@author: Mark
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Apr  3 16:44:27 2022
-@author: Mark, Destiny
+@author: Destiny, Mark
 """
 
 import pandas as pd
@@ -79,7 +73,6 @@ plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=sour
 plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source4, view=view2, color='blue')
 
 plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title="Y1 Raw Values", title_location='left')
-plot2.title.text =
 
 plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view, color='orange')
 
