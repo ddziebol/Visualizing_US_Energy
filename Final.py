@@ -8,9 +8,9 @@ import time
 import pandas as pd
 from bokeh.io import show
 from bokeh.plotting import figure
-from bokeh.layouts import layout, column, gridplot
+from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
-    CrosshairTool, VArea, Patch, Patches, BoxZoomTool
+    CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div
 
 # -----clean and format the data
 
@@ -68,7 +68,7 @@ linked_crosshair = CrosshairTool(dimensions="height")
 box_selector = BoxSelectTool()
 box_zoom = BoxZoomTool()
 #removed box_selector from list
-tools_to_show = ['box_zoom', hover, linked_crosshair,  'pan,save', 'reset', 'wheel_zoom']
+tools_to_show = ['box_zoom', hover, linked_crosshair,  'pan,save', 'reset']
 toolbar_options=dict(logo='gray')
 
 plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show, title="Percent Change", title_location='left')
@@ -79,9 +79,9 @@ plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=sour
 
 
 
-glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5)
-
-plot1.add_glyph(source3, glyph)
+# glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5)
+#
+# plot1.add_glyph(source3, glyph)
 
 
 plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title=Default1, title_location='left')
@@ -145,11 +145,8 @@ axesSelect.js_link('value', plot2.title, 'text')
 
 axesSelect2.js_link('value', plot3.title, 'text')
 
-
-
 # ----plot slider
-show(layout([slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
-
+show(layout(row(Div(text="<h1>U.S. Energy Comparison. Select and Compare:</h1>"), sizing_mode='stretch_width'), [slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
 # while True:
 #     time.sleep(1)
 #     print("Y1: ", glyph.y1)
