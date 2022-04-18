@@ -4,13 +4,13 @@ Created on Sun Apr 10 14:16:55 2022
 
 @author: Destiny, Mark
 """
-
+import time
 import pandas as pd
 from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
-    CrosshairTool, VArea
+    CrosshairTool, VArea, Patch, Patches, BoxZoomTool
 
 # -----clean and format the data
 
@@ -36,10 +36,10 @@ columns_change = sorted(cleaned_data.columns[18:])
 cleaned_data['active_axis'] = cleaned_data['U.S. Crude Oil Production'] #This gives all graphs same starting values
 cleaned_data['Month'] = pd.to_datetime(cleaned_data.index, format="%b-%y")
 
-source = ColumnDataSource(data=cleaned_data)  # Plot2
-source2 = ColumnDataSource(data=cleaned_data)  # Plot3
-source3 = ColumnDataSource(data=cleaned_data)  # Plot1
-source4 = ColumnDataSource(data=cleaned_data)  # Plot1
+source = ColumnDataSource(data=cleaned_data)  # Plot2 -> 3
+source2 = ColumnDataSource(data=cleaned_data)  # Plot3 -> 4
+source3 = ColumnDataSource(data=cleaned_data)  # Plot1 -> 2
+source4 = ColumnDataSource(data=cleaned_data)  # Plot1 -> 1
 view = CDSView(source=source)  # Plot2
 view2 = CDSView(source=source2)  # Plot3
 view3 = CDSView(source=source3)  # Plot1
@@ -66,14 +66,23 @@ hover = HoverTool(
 linked_crosshair = CrosshairTool(dimensions="height")
 
 box_selector = BoxSelectTool()
-
-tools_to_show = [hover, linked_crosshair, box_selector, 'box_zoom', 'pan,save', 'reset', 'wheel_zoom']
+box_zoom = BoxZoomTool()
+#removed box_selector from list
+tools_to_show = ['box_zoom', hover, linked_crosshair,  'pan,save', 'reset', 'wheel_zoom']
+toolbar_options=dict(logo='gray')
 
 plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show, title="Percent Change", title_location='left')
 
 plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source3, view=view, color='orange')
 
 plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source4, view=view2, color='blue')
+
+
+
+glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5)
+
+plot1.add_glyph(source3, glyph)
+
 
 plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title=Default1, title_location='left')
 
@@ -88,16 +97,10 @@ plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when ma
 # ----- Create Slider and Selector objects
 slider = DateRangeSlider(title="Date Range: ", start=min(x), end=max(x), step=1, value=(min(x), max(x)))
 
-axesSelect = Select(title="Y-Axis:", value=Default1, options=columns, background = 'orange')
+axesSelect = Select(title="Y-Axis:", value=Default1, options=columns, background='orange')
 
 axesSelect2 = Select(title="Y-Axis2:", value=Default2, options=columns, background='#848FF0')
 
-# def update_title2(attrname, old, new):
-#     plot2.title.text = source.data['active_axis'].value
-#
-#
-# def update_title3(attrname, old, new):
-#     plot3.title.text = source2.data['active_axis'].value
 
 # ------link slider to graph
 slider.js_link("value", plot2.x_range, "start", attr_selector=0)
@@ -114,6 +117,7 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source=source3, axesSelect=a
   source.change.emit()
   """))
 
+
 axesSelect2.js_on_change('value', CustomJS(args=dict(source=source2, axesSelect=axesSelect2), code="""
   source.data['active_axis'] = source.data[axesSelect.value]
   source.change.emit()
@@ -124,9 +128,29 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=
   source.change.emit()
   """))
 
+# axesSelect.js_on_change('value', CustomJS(args=dict(glyph = glyph, axesSelect=axesSelect), code="""
+#   glyph.y1 = "Change in " + axesSelect.value
+#   glyph.change.emit()
+#   """))
+#
+# axesSelect2.js_on_change('value', CustomJS(args=dict(glyph = glyph, axesSelect=axesSelect2), code="""
+#   glyph.y2 = "Change in " + axesSelect.value
+#   glyph.change.emit()
+#   """))
+
+# axesSelect.js_link('value', glyph, 'y1')
+# axesSelect2.js_link('value', glyph, 'y2')
+
 axesSelect.js_link('value', plot2.title, 'text')
 
 axesSelect2.js_link('value', plot3.title, 'text')
 
+
+
 # ----plot slider
-show(layout([slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2], [plot3]])))
+show(layout([slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
+
+# while True:
+#     time.sleep(1)
+#     print("Y1: ", glyph.y1)
+#     print("Y2: ", glyph.y2)

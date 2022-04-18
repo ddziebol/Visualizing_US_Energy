@@ -114,5 +114,10 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=
   source.change.emit()
   """))
 
+axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=axesSelect2), code="""
+  source.data['active_axis'] = source.data["Change in " + axesSelect.value]
+  source.change.emit()
+  """))
+
 # ----plot slider
 show(layout([slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2], [plot3]])))
