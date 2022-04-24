@@ -11,7 +11,7 @@ from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
     CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter
 from bokeh.transform import linear_cmap, LinearColorMapper
-from bokeh.palettes import Spectral6, GnBu, Viridis256
+from bokeh.palettes import Spectral6, GnBu, mpl, brewer, all_palettes, Viridis256, Cividis256, Turbo256, Viridis, Cividis, cividis, viridis
 # -----clean and format the data
 
 raw_data = pd.read_csv("US_Energy.csv", delimiter=",", na_values=('--'))
@@ -72,11 +72,7 @@ box_zoom = BoxZoomTool()
 tools_to_show = ['box_zoom', hover, linked_crosshair,  'pan,save', 'reset']
 toolbar_options=dict(logo='gray')
 
-
-#Linear_cmap for color?
-#mapper = linear_cmap(field_name='y', palette=Spectral6, low=0, high=10)
-
-# ----plot configuration:
+# ----plot + line configuration:
 
 
 plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show, title="Percent Change", title_location='left')
@@ -84,24 +80,6 @@ plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_sho
 plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source3, view=view3, color='orange')
 
 plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source4, view=view4, color='blue')
-
-view5 = CDSView(source=source3, filters=[IndexFilter([0,1,2,3,4,5])])
-view6 = CDSView(source=source3, filters=[IndexFilter([5,6,7,8,9,10,11])])
-
-glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = 'purple') #works
-glyph2 = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = 'gray')
-
-plot1.add_glyph(source3, glyph, view = view5) #works
-plot1.add_glyph(source3, glyph2, view = view6)
-
-#plot1.hbar(y = 0, right = max(source.data['Month']), left = min(source.data['Month']), height = 1, fill_alpha = .1) #Works - colors graph one color for range of month. Does pick up hover tool.
-
-
-
-
-
-
-
 
 
 plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title=Default1, title_location='left')
@@ -113,6 +91,46 @@ plot3 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_sho
 plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2,  color='blue')
 
 plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
+
+# ------Fill between lines creation and initial application:
+
+
+
+#Palatte selection:
+length = len(source.data['Month'])
+palette = viridis(int(length/2)) # should have length/2 evenly spaced color values from matplotlib colormap viridis
+
+#Works
+# view5 = CDSView(source=source3, filters=[IndexFilter([0,1])], name = str(1))
+# view6 = CDSView(source=source3, filters=[IndexFilter([1,2])], name = str(2))
+#
+# glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[1])
+# glyph2 = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[2])
+#
+# plot1.add_glyph(source3, glyph, view = view5)
+# plot1.add_glyph(source3, glyph2, view = view6)
+
+# views = [view5, view6]
+# glyphs = [glyph, glyph2]
+#
+# for i in range(len(views)):
+#     plot1.add_glyph(source3, glyphs[i], view = views[i])
+
+#Testing
+#Make list of all views, one for each month:
+
+views = []
+for i in range(length-1):
+    views.append(CDSView(source=source3, filters = [IndexFilter([i, i+1])]))
+
+#Make glyphs with colormap:
+glyphs = []
+for i in range(length-1):
+    glyphs.append(VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[int(i/2)]))
+#Apply glyphs and views:
+for i in range(length-1):
+    plot1.add_glyph(source3, glyphs[i], view = views[i])
+
 
 # ----- Create Slider and Selector objects
 slider = DateRangeSlider(title="Date Range: ", start=min(x), end=max(x), step=1, value=(min(x), max(x)))
@@ -150,17 +168,19 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=
 
 ### Update VArea
 
-axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph,glyph2 = glyph2, axesSelect=axesSelect), code="""
-  glyph.y1.field = "Change in " + axesSelect.value;
-  glyph2.y1.field = "Change in " + axesSelect.value;
-  source.change.emit()
-  """))
-
-axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph, glyph2 = glyph2, axesSelect=axesSelect2), code="""
-  glyph.y2.field = "Change in " + axesSelect.value;
-  glyph2.y2.field = "Change in " + axesSelect.value;
-  source.change.emit()
-  """))
+# axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph,glyph2 = glyph2, axesSelect=axesSelect), code="""
+#   glyph.y1.field = "Change in " + axesSelect.value;
+#   glyph.fill_color = 'blue';
+#   glyph2.y1.field = "Change in " + axesSelect.value;
+#   glyph2.fill_color = 'red';
+#   source.change.emit()
+#   """))
+#
+# axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph, glyph2 = glyph2, axesSelect=axesSelect2), code="""
+#   glyph.y2.field = "Change in " + axesSelect.value;
+#   glyph2.y2.field = "Change in " + axesSelect.value;
+#   source.change.emit()
+#   """))
 
 axesSelect.js_link('value', plot2.title, 'text')
 
@@ -172,4 +192,4 @@ show(layout(row(Div(text="<h1>U.S. Energy Comparison. Select and Compare:</h1>")
 #     time.sleep(1)
 #     print("Y1: ", glyph.y1)
 #     print("Y2: ", glyph.y2)
-print(source.data['Month'][0:5])
+#print(len(source.data['Month']))
