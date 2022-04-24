@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Apr 10 14:16:55 2022
-
 @author: Destiny, Mark
 """
 import time
@@ -73,15 +72,14 @@ toolbar_options=dict(logo='gray')
 
 plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show, title="Percent Change", title_location='left')
 
-plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source3, view=view, color='orange')
+plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source3, view=view3, color='orange')
 
-plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source4, view=view2, color='blue')
+plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source4, view=view4, color='blue')
 
 
+glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5) #renders but does not update.
 
-# glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5)
-#
-# plot1.add_glyph(source3, glyph)
+r = plot1.add_glyph(source3, glyph)
 
 
 plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title=Default1, title_location='left')
@@ -128,15 +126,17 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=
   source.change.emit()
   """))
 
-# axesSelect.js_on_change('value', CustomJS(args=dict(glyph = glyph, axesSelect=axesSelect), code="""
-#   glyph.y1 = "Change in " + axesSelect.value
-#   glyph.change.emit()
-#   """))
-#
-# axesSelect2.js_on_change('value', CustomJS(args=dict(glyph = glyph, axesSelect=axesSelect2), code="""
-#   glyph.y2 = "Change in " + axesSelect.value
-#   glyph.change.emit()
-#   """))
+### Update VArea
+
+axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph, axesSelect=axesSelect), code="""
+  glyph.y1.field = "Change in " + axesSelect.value
+  source.change.emit()
+  """))
+
+axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph, axesSelect=axesSelect2), code="""
+  glyph.y2.field = "Change in " + axesSelect.value
+  source.change.emit()
+  """))
 
 # axesSelect.js_link('value', glyph, 'y1')
 # axesSelect2.js_link('value', glyph, 'y2')
