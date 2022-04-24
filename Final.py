@@ -93,32 +93,12 @@ plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=sour
 plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
 
 # ------Fill between lines creation and initial application:
-
-
+length = len(source.data['Month'])
 
 #Palatte selection:
-length = len(source.data['Month'])
 palette = viridis(int(length/2)) # should have length/2 evenly spaced color values from matplotlib colormap viridis
 
-#Works
-# view5 = CDSView(source=source3, filters=[IndexFilter([0,1])], name = str(1))
-# view6 = CDSView(source=source3, filters=[IndexFilter([1,2])], name = str(2))
-#
-# glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[1])
-# glyph2 = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[2])
-#
-# plot1.add_glyph(source3, glyph, view = view5)
-# plot1.add_glyph(source3, glyph2, view = view6)
-
-# views = [view5, view6]
-# glyphs = [glyph, glyph2]
-#
-# for i in range(len(views)):
-#     plot1.add_glyph(source3, glyphs[i], view = views[i])
-
-#Testing
 #Make list of all views, one for each month:
-
 views = []
 for i in range(length-1):
     views.append(CDSView(source=source3, filters = [IndexFilter([i, i+1])]))
@@ -127,6 +107,7 @@ for i in range(length-1):
 glyphs = []
 for i in range(length-1):
     glyphs.append(VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[int(i/2)]))
+
 #Apply glyphs and views:
 for i in range(length-1):
     plot1.add_glyph(source3, glyphs[i], view = views[i])
@@ -167,21 +148,21 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=
   """))
 
 ### Update VArea
+axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, glyphs = glyphs, axesSelect=axesSelect), code="""
+  for (var i = 0; i < glyphs.length; i++){
+      glyphs[i].y1.field = "Change in " + axesSelect.value;
+  }
+  source.change.emit()
+  """))
 
-# axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph,glyph2 = glyph2, axesSelect=axesSelect), code="""
-#   glyph.y1.field = "Change in " + axesSelect.value;
-#   glyph.fill_color = 'blue';
-#   glyph2.y1.field = "Change in " + axesSelect.value;
-#   glyph2.fill_color = 'red';
-#   source.change.emit()
-#   """))
-#
-# axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph, glyph2 = glyph2, axesSelect=axesSelect2), code="""
-#   glyph.y2.field = "Change in " + axesSelect.value;
-#   glyph2.y2.field = "Change in " + axesSelect.value;
-#   source.change.emit()
-#   """))
+axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyphs = glyphs, axesSelect=axesSelect2), code="""
+  for (var i = 0; i < glyphs.length; i++){
+      glyphs[i].y2.field = "Change in " + axesSelect.value;
+  }
+  source.change.emit()
+  """))
 
+### Update Names of graphs
 axesSelect.js_link('value', plot2.title, 'text')
 
 axesSelect2.js_link('value', plot3.title, 'text')
