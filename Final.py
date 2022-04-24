@@ -9,8 +9,9 @@ from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
-    CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div
-
+    CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter
+from bokeh.transform import linear_cmap, LinearColorMapper
+from bokeh.palettes import Spectral6, GnBu, Viridis256
 # -----clean and format the data
 
 raw_data = pd.read_csv("US_Energy.csv", delimiter=",", na_values=('--'))
@@ -53,8 +54,9 @@ source2.data['active_axis'] = source.data[Default2]
 source3.data['active_axis'] = source.data["Change in "+Default1]  # sets appropriate defaults for plot1
 source4.data['active_axis'] = source.data["Change in "+Default2]
 
-# ----basic plots
+#example views for varea segments:
 
+#-----Prepare tools for plots:
 hover = HoverTool(
     mode="vline",
     tooltips=[
@@ -70,16 +72,36 @@ box_zoom = BoxZoomTool()
 tools_to_show = ['box_zoom', hover, linked_crosshair,  'pan,save', 'reset']
 toolbar_options=dict(logo='gray')
 
+
+#Linear_cmap for color?
+#mapper = linear_cmap(field_name='y', palette=Spectral6, low=0, high=10)
+
+# ----plot configuration:
+
+
 plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show, title="Percent Change", title_location='left')
 
-plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source3, view=view3, color='orange')
+plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source3, view=view3, color='orange')
 
-plot1.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source4, view=view4, color='blue')
+plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source4, view=view4, color='blue')
+
+view5 = CDSView(source=source3, filters=[IndexFilter([0,1,2,3,4,5])])
+view6 = CDSView(source=source3, filters=[IndexFilter([5,6,7,8,9,10,11])])
+
+glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = 'purple') #works
+glyph2 = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = 'gray')
+
+plot1.add_glyph(source3, glyph, view = view5) #works
+plot1.add_glyph(source3, glyph2, view = view6)
+
+#plot1.hbar(y = 0, right = max(source.data['Month']), left = min(source.data['Month']), height = 1, fill_alpha = .1) #Works - colors graph one color for range of month. Does pick up hover tool.
 
 
-glyph = VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5) #renders but does not update.
 
-r = plot1.add_glyph(source3, glyph)
+
+
+
+
 
 
 plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title=Default1, title_location='left')
@@ -128,18 +150,17 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=
 
 ### Update VArea
 
-axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph, axesSelect=axesSelect), code="""
-  glyph.y1.field = "Change in " + axesSelect.value
+axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph,glyph2 = glyph2, axesSelect=axesSelect), code="""
+  glyph.y1.field = "Change in " + axesSelect.value;
+  glyph2.y1.field = "Change in " + axesSelect.value;
   source.change.emit()
   """))
 
-axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph, axesSelect=axesSelect2), code="""
-  glyph.y2.field = "Change in " + axesSelect.value
+axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyph = glyph, glyph2 = glyph2, axesSelect=axesSelect2), code="""
+  glyph.y2.field = "Change in " + axesSelect.value;
+  glyph2.y2.field = "Change in " + axesSelect.value;
   source.change.emit()
   """))
-
-# axesSelect.js_link('value', glyph, 'y1')
-# axesSelect2.js_link('value', glyph, 'y2')
 
 axesSelect.js_link('value', plot2.title, 'text')
 
@@ -151,3 +172,4 @@ show(layout(row(Div(text="<h1>U.S. Energy Comparison. Select and Compare:</h1>")
 #     time.sleep(1)
 #     print("Y1: ", glyph.y1)
 #     print("Y2: ", glyph.y2)
+print(source.data['Month'][0:5])
