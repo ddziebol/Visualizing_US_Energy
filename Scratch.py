@@ -81,3 +81,57 @@ ylist = source2.data['active_axis'].slice(-i-3);
 }
 
 var xminmean = xlist.map(element = > element - xmean);
+
+
+var xsqr = xlist.map(function(x){return Math.pow(x, 2)});
+const xsqrsum = xsqr.reduce((partialSum, a) = > partialSum + a, 0);
+var ysqr = ylist.map(function(x){return Math.pow(x, 2)});
+const ysqrsum = ysqr.reduce((partialSum, a) = > partialSum + a, 0);
+
+var xyminmean = xminmean.reduce(function(r,a,i){return r+a*yminmean[i]},0); // list of xminmean * yminmean, elementwise
+
+const
+xsum = xlist.reduce((partialSum, a) = > partialSum + a, 0);
+const
+xmean = xsum / nn;
+let
+xminmean = xlist.map(function(x)
+{
+return x - xmean});
+
+const
+ysum = ylist.reduce((partialSum, a) = > partialSum + a, 0);
+const
+ymean = ysum / nn;
+let
+yminmean = ylist.map(function(x)
+{
+return x - ymean});
+
+let xyminmean = xminmean.map(function(r, a, i)
+{
+return r + a * yminmean[i]});
+
+const xyminmeansum = xyminmean.reduce((partialSum, a) = > partialSum + a, 0);
+
+var xminmeansqr = xminmean.map(function(x)
+{return Math.pow(x, 2)});
+const xminmeansqrsum = xminmeansqr.reduce((partialSum, a) = > partialSum + a, 0);
+
+var yminmeansqr = yminmean.map(function(x)
+{
+return Math.pow(x, 2)});
+const yminmeansqrsum = yminmeansqr.reduce((partialSum, a) = > partialSum + a, 0);
+
+const cornom = xyminmeansum;
+const cordenom = Math.sqrt(xminmeansqrsum * yminmeansqrsum);
+const cor = cornom / cordenom;
+
+var
+xnorm = xlist.map(function(value)
+{
+return value - xmean;});
+var
+xnorm = ylist.map(function(value)
+{
+return value - ymean;});

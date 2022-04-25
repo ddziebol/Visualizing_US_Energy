@@ -152,22 +152,25 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = 
   var cof = [];
   var xlist = [];
   var ylist = [];
-  var fullx = source.data['active_axis'].filter(Boolean);
-  var fully = source2.data['active_axis'].filter(Boolean);
+  var fullx = source.data['active_axis'].filter(Boolean); //remove nan 
+  var fully = source2.data['active_axis'].filter(Boolean); //remove nan
+  
   console.log("Length of first source: ")
   console.log(fullx.length)
   console.log("second source: ")
   console.log(fully.length)
+  
+  const average = (array) => array.reduce((a, b) => a + b) / array.length;
+
+  
   var n = fullx.length;
-  if (fullx.length != fully.length)
-  {
+  if (fullx.length != fully.length){  //change n to equal length of shortest no nan data 
     console.log("If Entered")
     if (fullx.length < fully.length){
         n = fullx.length;}
     if (fullx.length > fully.length){
         n = fully.length;}
   }
-  console.log("N value: ", n);
   for (var i = 0; i < n; i++){
       if (i < 3){
         xlist = source.data['active_axis'].slice(-i-3);
@@ -177,35 +180,28 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = 
         xlist = source.data['active_axis'].slice(-i-3, -i+3);
         ylist = source2.data['active_axis'].slice(-i-3, -i+3);
         }
-      const nn = xlist.length;  
+      const nn = xlist.length
       
-      const xsum = xlist.reduce((partialSum, a) => partialSum + a, 0);
-      const xmean = xsum/nn;
-      var xminmean = xlist.map(function (x) {return x - xmean});
+      const xmean = average(xlist);
+      const ymean = average(ylist);
       
-      const ysum = ylist.reduce((partialSum, a) => partialSum + a, 0);
-      const ymean = ysum/nn;
-      var yminmean = ylist.map(function (x) {return x - ymean});
+      var xnorm = xlist.map(x => x-xmean);
+      var ynorm = ylist.map(x => x-ymean);
       
-      const xyminmeansum = xminmean.reduce(function(r,a,i){return r+a*yminmean[i]},0); 
+      const xnormsum = xnorm.reduce((partialSum, a) => partialSum + a, 0);
+      const ynormsum = ynorm.reduce((partialSum, a) => partialSum + a, 0);
       
-      var xminmeansqr = xminmean.map(function (x) {return Math.pow(x, 2)});
-      const xminmeansqrsum = xminmeansqr.reduce(function(r,a,i){return r+a*ylist[i]},0);
+      var xnormsq = xnorm.map(x=> Math.pow(x,2));
+      var ynormsq = ynorm.map(x=> Math.pow(x,2));
       
-      var yminmeansqr = yminmean.map(function (x) {return Math.pow(x, 2)});
-      const yminmeansqrsum = yminmeansqr.reduce(function(r,a,i){return r+a*ylist[i]},0);
+      const xnormsqsum = xnormsq.reduce((partialSum, a) => partialSum + a, 0);
+      const ynromsqsum = ynormsq.reduce((partialSum, a) => partialSum + a, 0);
       
+      const cornom = xnorm.reduce(function(r,a,i){return r+a*ynorm[i]},0);
+      const cordenom = Math.sqrt(xnormsqsum * ynromsqsum);
+      const cor = cornom/cordenom
       
-      const xysum = xlist.reduce(function(r,a,i){return r+a*ylist[i]},0);
-      var xsqr = xlist.map(function (x) {return Math.pow(x, 2)});
-      const xsqrsum = xsqr.reduce((partialSum, a) => partialSum + a, 0);
-      var ysqr = ylist.map(function (x) {return Math.pow(x, 2)});
-      const ysqrsum = ysqr.reduce((partialSum, a) => partialSum + a, 0);
-      
-      const cornom = xyminmeansum
-      const cordenom = Math.sqrt(xminmeansqrsum*yminmeansqrsum)
-      const cor = cornom / cordenom
-      console.log(cor, cornom, cordenom, xsum, ysum, xysum, xsqrsum, ysqrsum, "ylen: ", ylist.length, "xlen: ", xlist.length);       
+      console.log(cor, cornom, cordenom);       
   };
   for (var i = 0; i < glyphs.length; i++){
       glyphs[i].y1.field = "Change in " + axesSelect.value;
