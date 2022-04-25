@@ -11,7 +11,7 @@ from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
     CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter
 from bokeh.transform import linear_cmap, LinearColorMapper
-from bokeh.palettes import Spectral6, GnBu, mpl, brewer, all_palettes, Viridis256, Cividis256, Turbo256, Viridis, Cividis, cividis, viridis
+from bokeh.palettes import Spectral6, GnBu, mpl, brewer, all_palettes, Viridis256, Cividis256, Turbo256, Viridis, Cividis, cividis, viridis, inferno
 # -----clean and format the data
 
 raw_data = pd.read_csv("US_Energy.csv", delimiter=",", na_values=('--'))
@@ -96,7 +96,7 @@ plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when ma
 length = len(source.data['Month'])
 
 #Palatte selection:
-palette = viridis(int(length/2)) # should have length/2 evenly spaced color values from matplotlib colormap viridis
+palette = inferno(int(length/2)) # should have length/2 evenly spaced color values from matplotlib colormap viridis
 
 #Make list of all views, one for each month:
 views = []
@@ -148,19 +148,82 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=
   """))
 
 ### Update VArea
-axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, glyphs = glyphs, axesSelect=axesSelect), code="""
+axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = source4, glyphs = glyphs, palette = palette, axesSelect=axesSelect), code="""
+  var cof = [];
+  var xlist = [];
+  var ylist = [];
+  var fullx = source.data['active_axis'].filter(Boolean);
+  var fully = source2.data['active_axis'].filter(Boolean);
+  console.log("Length of first source: ")
+  console.log(fullx.length)
+  console.log("second source: ")
+  console.log(fully.length)
+  var n = fullx.length;
+  if (fullx.length != fully.length)
+  {
+    console.log("If Entered")
+    if (fullx.length < fully.length){
+        n = fullx.length;}
+    if (fullx.length > fully.length){
+        n = fully.length;}
+  }
+  console.log("N value: ", n);
+  for (var i = 0; i < n; i++){
+      if (i < 3){
+        xlist = source.data['active_axis'].slice(-i-3);
+        ylist = source2.data['active_axis'].slice(-i-3);
+        }
+      if (i>3){
+        xlist = source.data['active_axis'].slice(-i-3, -i+3);
+        ylist = source2.data['active_axis'].slice(-i-3, -i+3);
+        }
+      const nn = xlist.length;  
+      
+      const xsum = xlist.reduce((partialSum, a) => partialSum + a, 0);
+      const xmean = xsum/nn;
+      var xminmean = xlist.map(function (x) {return x - xmean});
+      
+      const ysum = ylist.reduce((partialSum, a) => partialSum + a, 0);
+      const ymean = ysum/nn;
+      var yminmean = ylist.map(function (x) {return x - ymean});
+      
+      const xyminmeansum = xminmean.reduce(function(r,a,i){return r+a*yminmean[i]},0); 
+      
+      var xminmeansqr = xminmean.map(function (x) {return Math.pow(x, 2)});
+      const xminmeansqrsum = xminmeansqr.reduce(function(r,a,i){return r+a*ylist[i]},0);
+      
+      var yminmeansqr = yminmean.map(function (x) {return Math.pow(x, 2)});
+      const yminmeansqrsum = yminmeansqr.reduce(function(r,a,i){return r+a*ylist[i]},0);
+      
+      
+      const xysum = xlist.reduce(function(r,a,i){return r+a*ylist[i]},0);
+      var xsqr = xlist.map(function (x) {return Math.pow(x, 2)});
+      const xsqrsum = xsqr.reduce((partialSum, a) => partialSum + a, 0);
+      var ysqr = ylist.map(function (x) {return Math.pow(x, 2)});
+      const ysqrsum = ysqr.reduce((partialSum, a) => partialSum + a, 0);
+      
+      const cornom = xyminmeansum
+      const cordenom = Math.sqrt(xminmeansqrsum*yminmeansqrsum)
+      const cor = cornom / cordenom
+      console.log(cor, cornom, cordenom, xsum, ysum, xysum, xsqrsum, ysqrsum, "ylen: ", ylist.length, "xlen: ", xlist.length);       
+  };
   for (var i = 0; i < glyphs.length; i++){
       glyphs[i].y1.field = "Change in " + axesSelect.value;
+      glyphs[i].fill_color = palette[Math.floor(Math.random()*101)]
+  };
+  
+  source.change.emit()
+  """))
+
+axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyphs = glyphs, palette = palette, axesSelect=axesSelect2), code="""
+  for (var i = 0; i < glyphs.length; i++){
+      glyphs[i].y2.field = "Change in " + axesSelect.value;
+      glyphs[i].fill_color = palette[Math.floor(Math.random()*101)]
   }
   source.change.emit()
   """))
 
-axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyphs = glyphs, axesSelect=axesSelect2), code="""
-  for (var i = 0; i < glyphs.length; i++){
-      glyphs[i].y2.field = "Change in " + axesSelect.value;
-  }
-  source.change.emit()
-  """))
+
 
 ### Update Names of graphs
 axesSelect.js_link('value', plot2.title, 'text')

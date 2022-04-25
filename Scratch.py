@@ -49,3 +49,35 @@ source.change.emit()
 #     plot1.add_glyph(source3, glyphs[i], view = views[i])
 
 #Testing
+# console.log(source.data['active_axis'][i])
+
+var
+fullx = [];
+var
+fully = [];
+fullx = source.data['active_axis'].filter(function(n)
+{
+return n | | n === 0;
+});
+fully = source2.data['active_axis']
+console.log([0]])
+const
+n = source.data['active_axis'].length;
+if (source.data['active_axis'].length != source2.data['active_axis'].length)
+{
+    console.log("If Entered")
+    if (source.data['active_axis'].length < source2.data['active_axis'].length)
+n = source.data['active_axis'].length;
+if (source.data['active_axis'].length > source2.data['active_axis'].length)
+n = source2.data['active_axis'].length;
+}
+
+if (i < 3){
+
+}
+if (i < 3){
+xlist = source.data['active_axis'].slice(-i-3);
+ylist = source2.data['active_axis'].slice(-i-3);
+}
+
+var xminmean = xlist.map(element = > element - xmean);
