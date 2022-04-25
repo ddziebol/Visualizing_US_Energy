@@ -10,7 +10,7 @@ from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
-    CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter
+    CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter, ColorBar
 from bokeh.transform import linear_cmap, LinearColorMapper
 from bokeh.palettes import Spectral6, GnBu, mpl, brewer, all_palettes, Viridis256, Cividis256, Turbo256, Viridis, Cividis, cividis, viridis, inferno, linear_palette
 
@@ -75,20 +75,22 @@ tools_to_show = ['box_zoom', hover, linked_crosshair,  'pan,save', 'reset']
 toolbar_options=dict(logo='gray')
 
 # ----plot + line configuration:
+width = 1500
+height1 = 400
+height2 = 200
 
-
-plot1 = figure(x_axis_type="datetime", width=900, height=400, tools=tools_to_show, title="Percent Change", title_location='left')
+plot1 = figure(x_axis_type="datetime", width=width, height=height1, tools=tools_to_show, title="Percent Change", title_location='left')
 
 plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source3, view=view3, color='orange')
 
 plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source4, view=view4, color='blue')
 
 
-plot2 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title=Default1, title_location='left')
+plot2 = figure(x_axis_type="datetime", width=width, height=height2, tools=tools_to_show, title=Default1, title_location='left')
 
 plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view, color='orange')
 
-plot3 = figure(x_axis_type="datetime", width=900, height=200, tools=tools_to_show, title=Default2, title_location='left')
+plot3 = figure(x_axis_type="datetime", width=width, height=height2, tools=tools_to_show, title=Default2, title_location='left')
 
 plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2,  color='blue')
 
@@ -97,9 +99,18 @@ plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when ma
 # ------Fill between lines creation and initial application:
 length = len(source.data['Month'])
 
-#Palatte selection:
-#palette = inferno(200) # should have 200 evenly spaced color values from matplotlib colormap of choice
-palette = linear_palette(cc.gwv, 200)
+#Palatte selection and add colorbar:
+
+selectPalette = cc.gwv
+
+palette = linear_palette(selectPalette, 200)
+
+paletteInstance2 = LinearColorMapper(selectPalette, low = -1, high = 1)
+
+colorbar = ColorBar(color_mapper = paletteInstance2, location = (0,0), title = "Correlation")
+plot1.add_layout(colorbar, 'right')
+
+
 #Make list of all views, one for each month:
 views = []
 for i in range(length-1):
@@ -108,7 +119,7 @@ for i in range(length-1):
 #Make glyphs with colormap:
 glyphs = []
 for i in range(length-1):
-    glyphs.append(VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[int((i * 200) / length)]))
+    glyphs.append(VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.7, fill_color = palette[int((i * 200) / length)]))
 
 #Apply glyphs and views:
 for i in range(length-1):
