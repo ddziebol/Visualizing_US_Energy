@@ -5,13 +5,15 @@ Created on Sun Apr 10 14:16:55 2022
 """
 import time
 import pandas as pd
+import colorcet as cc
 from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
     CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter
 from bokeh.transform import linear_cmap, LinearColorMapper
-from bokeh.palettes import Spectral6, GnBu, mpl, brewer, all_palettes, Viridis256, Cividis256, Turbo256, Viridis, Cividis, cividis, viridis, inferno
+from bokeh.palettes import Spectral6, GnBu, mpl, brewer, all_palettes, Viridis256, Cividis256, Turbo256, Viridis, Cividis, cividis, viridis, inferno, linear_palette
+
 # -----clean and format the data
 
 raw_data = pd.read_csv("US_Energy.csv", delimiter=",", na_values=('--'))
@@ -96,8 +98,8 @@ plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when ma
 length = len(source.data['Month'])
 
 #Palatte selection:
-palette = inferno(int(length/2)) # should have length/2 evenly spaced color values from matplotlib colormap viridis
-
+#palette = inferno(200) # should have 200 evenly spaced color values from matplotlib colormap of choice
+palette = linear_palette(cc.gwv, 200)
 #Make list of all views, one for each month:
 views = []
 for i in range(length-1):
@@ -106,7 +108,7 @@ for i in range(length-1):
 #Make glyphs with colormap:
 glyphs = []
 for i in range(length-1):
-    glyphs.append(VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[int(i/2)]))
+    glyphs.append(VArea(x = 'Month', y1 = "Change in "+Default1, y2 = "Change in "+Default2, fill_alpha = 0.5, fill_color = palette[int((i * 200) / length)]))
 
 #Apply glyphs and views:
 for i in range(length-1):
@@ -162,7 +164,6 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = 
   
   const average = (array) => array.reduce((a, b) => a + b) / array.length;
 
-  
   var n = fullx.length;
   if (fullx.length != fully.length){  //change n to equal length of shortest no nan data 
     console.log("If Entered")
@@ -171,9 +172,9 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = 
     if (fullx.length > fully.length){
         n = fully.length;}
   }
-  for (var i = 0; i < n; i++){
+  for (var i = 0; i < n; i++){ //for every value of the shorter data set
       if (i < 3){
-        xlist = source.data['active_axis'].slice(-i-3);
+        xlist = source.data['active_axis'].slice(-i-3); //in reverse order
         ylist = source2.data['active_axis'].slice(-i-3);
         }
       if (i>3){
@@ -201,11 +202,12 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = 
       const cordenom = Math.sqrt(xnormsqsum * ynromsqsum);
       const cor = cornom/cordenom
       
-      console.log(cor, cornom, cordenom);       
-  };
+      console.log(cor, " Index: ", i, "Length of Glyphs: ", glyphs.length, "Pallet: ", parseInt(((cor + 1) * 200) / 2));
+      
+      glyphs[glyphs.length - 1 - i].fill_color = palette[parseInt(((cor + 1) * 200) / 2)]
+  }
   for (var i = 0; i < glyphs.length; i++){
       glyphs[i].y1.field = "Change in " + axesSelect.value;
-      glyphs[i].fill_color = palette[Math.floor(Math.random()*101)]
   };
   
   source.change.emit()
@@ -214,7 +216,7 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = 
 axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, glyphs = glyphs, palette = palette, axesSelect=axesSelect2), code="""
   for (var i = 0; i < glyphs.length; i++){
       glyphs[i].y2.field = "Change in " + axesSelect.value;
-      glyphs[i].fill_color = palette[Math.floor(Math.random()*101)]
+      //glyphs[i].fill_color = palette[Math.floor(Math.random()*101)]
   }
   source.change.emit()
   """))

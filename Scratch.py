@@ -135,3 +135,5 @@ var
 xnorm = ylist.map(function(value)
 {
 return value - ymean;});
+
+//glyphs[i].fill_color = palette[Math.floor(Math.random()*101)]
