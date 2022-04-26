@@ -7,7 +7,7 @@ import time
 import pandas as pd
 import colorcet as cc
 import datetime as dt
-from bokeh.io import show
+from bokeh.io import show, curdoc
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
@@ -83,7 +83,7 @@ height2 = 200
 
 plot1 = figure(x_axis_type="datetime", width=width, height=height1, tools=tools_to_show, title="Percent Change", title_location='left')
 
-plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source3, view=view3, color='orange')
+plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=1.0, source=source3, view=view3, color='orange')
 
 plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source4, view=view4, color='blue')
 
@@ -100,25 +100,25 @@ plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when ma
 
 #-------Spans and lables for dates
 SCovid19 = Span(location = source.data['Month'][363], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
-LCovid19 = Label(x =source.data['Month'][363], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of Covid-19 in U.S.", text_alpha = 1, text_font_style = 'bold')
+LCovid19 = Label(x =source.data['Month'][363], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of Covid-19 in U.S.", text_alpha = 1, text_font_style = 'bold',text_color='white')
 
 S2008 = Span(location = source.data['Month'][215], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
-L2008 = Label(x =source.data['Month'][215], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of 2008 U.S. financial crisis", text_alpha = 1,  text_font_style = 'bold')
+L2008 = Label(x =source.data['Month'][215], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of 2008 U.S. financial crisis", text_alpha = 1,  text_font_style = 'bold',text_color='white')
 
 SUkrane = Span(location = source.data['Month'][385], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
-LUkrane = Label(x =source.data['Month'][385], y = 0.14, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of 2022 war \nin Ukraine", text_alpha = 1,  text_font_style = 'bold')
+LUkrane = Label(x =source.data['Month'][385], y = 0.14, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of 2022 war \nin Ukraine", text_alpha = 1,  text_font_style = 'bold',text_color='white')
 
 SJP = Span(location = source.data['Month'][42], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
-LJP = Label(x =source.data['Month'][42], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Jurassic Park Released", text_alpha = 1,  text_font_style = 'bold')
+LJP = Label(x =source.data['Month'][42], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Jurassic Park Released", text_alpha = 1,  text_font_style = 'bold',text_color='white')
 
 S911 = Span(location = source.data['Month'][141], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
-L911 = Label(x =source.data['Month'][141], y = 0.13, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "9/11 Attacks", text_alpha = 1,  text_font_style = 'bold')
+L911 = Label(x =source.data['Month'][141], y = 0.13, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "9/11 Attacks", text_alpha = 1,  text_font_style = 'bold',text_color='white')
 
 SDotCom = Span(location = source.data['Month'][123], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
-LDotCom = Label(x =source.data['Month'][123], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Beginning of Dot Com crash", text_alpha = 1,  text_font_style = 'bold')
+LDotCom = Label(x =source.data['Month'][123], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Beginning of Dot Com crash", text_alpha = 1,  text_font_style = 'bold',text_color='white')
 
 SParis = Span(location = source.data['Month'][311], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
-LParis = Label(x =source.data['Month'][311], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of Paris Accord", text_alpha = 1,  text_font_style = 'bold')
+LParis = Label(x =source.data['Month'][311], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of Paris Accord", text_alpha = 1,  text_font_style = 'bold',text_color='white')
 
 EventSpans = [SCovid19, S2008, SUkrane, SJP, S911, SDotCom, SParis]
 EventLabels = [LCovid19, L2008, LUkrane, LJP, L911, LDotCom, LParis]
@@ -140,7 +140,7 @@ palette = linear_palette(selectPalette, 200)
 
 paletteInstance2 = LinearColorMapper(selectPalette, low = -1, high = 1)
 
-colorbar = ColorBar(color_mapper = paletteInstance2, location = (0,0), title = "Correlation")
+colorbar = ColorBar(color_mapper = paletteInstance2, label_standoff = 12, location = (0,0), title = "Correlation")
 plot1.add_layout(colorbar, 'right')
 
 
@@ -162,9 +162,9 @@ for i in range(length-1):
 # ----- Create Slider and Selector objects
 slider = DateRangeSlider(title="Date Range: ", start=min(x), end=max(x), step=1, value=(min(x), max(x)))
 
-axesSelect = Select(title="Y-Axis:", value=Default1, options=columns, background='orange')
+axesSelect = Select(title="Select First Time Series:", value=Default1, options=columns, background='orange')
 
-axesSelect2 = Select(title="Y-Axis2:", value=Default2, options=columns, background='#848FF0')
+axesSelect2 = Select(title="Select Second Time Series:", value=Default2, options=columns, background='#848FF0')
 
 radio_button_group = RadioButtonGroup(labels = ['Show Events', 'Hide Labels', 'Hide All'], active = 0, background ="#6AD8DB", sizing_mode = "stretch_both")
 
@@ -352,4 +352,7 @@ axesSelect2.js_link('value', plot3.title, 'text')
 #
 
 # ----plot slider
-show(layout(row(Div(text="<h1>U.S. Energy Trends: Select, Zoom, Explore</h1>"), sizing_mode='stretch_width'), [axesSelect, axesSelect2,slider, radio_button_group], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
+curdoc().theme = 'dark_minimal'
+show(layout(row(Div(text="<b>U.S. Energy Trends:</b>", style={'font-size':'200%'},margin=(0,5,0,5)), 
+                Div(text="<i><b>Select, Zoom, Explore</b></i>", style={'font-size':'150%'},margin=(7,5,0,5))), 
+            [axesSelect, axesSelect2,slider, radio_button_group], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
