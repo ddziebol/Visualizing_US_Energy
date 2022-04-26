@@ -6,11 +6,12 @@ Created on Sun Apr 10 14:16:55 2022
 import time
 import pandas as pd
 import colorcet as cc
+import datetime as dt
 from bokeh.io import show
 from bokeh.plotting import figure
 from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
-    CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter, ColorBar
+    CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter, ColorBar, Span, Label, RadioButtonGroup
 from bokeh.transform import linear_cmap, LinearColorMapper
 from bokeh.palettes import Spectral6, GnBu, mpl, brewer, all_palettes, Viridis256, Cividis256, Turbo256, Viridis, Cividis, cividis, viridis, inferno, linear_palette
 
@@ -97,6 +98,29 @@ plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=sour
 
 plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
 
+#-------Spans and lables for dates
+SCovid19 = Span(location = source.data['Month'][363], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
+LCovid19 = Label(x =source.data['Month'][363], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of Covid-19 in U.S.", text_alpha = 1, text_font_style = 'bold')
+
+S2008 = Span(location = source.data['Month'][215], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
+L2008 = Label(x =source.data['Month'][215], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of 2008 U.S. financial crisis", text_alpha = 1,  text_font_style = 'bold')
+
+SUkrane = Span(location = source.data['Month'][385], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
+LUkrane = Label(x =source.data['Month'][385], y = 0.14, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of 2022 war \nin Ukraine", text_alpha = 1,  text_font_style = 'bold')
+
+SJP = Span(location = source.data['Month'][42], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
+LJP = Label(x =source.data['Month'][42], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Jurassic Park Released", text_alpha = 1,  text_font_style = 'bold')
+
+
+EventSpans = [SCovid19, S2008, SUkrane, SJP]
+EventLabels = [LCovid19, L2008, LUkrane, LJP]
+
+for i in range(len(EventSpans)):
+    plot1.add_layout(EventSpans[i])
+
+for i in range(len(EventLabels)):
+    plot1.add_layout(EventLabels[i])
+
 # ------Fill between lines creation and initial application:
 length = len(source.data['Month'])
 
@@ -134,6 +158,7 @@ axesSelect = Select(title="Y-Axis:", value=Default1, options=columns, background
 
 axesSelect2 = Select(title="Y-Axis2:", value=Default2, options=columns, background='#848FF0')
 
+radio_button_group = RadioButtonGroup(labels = ['Show Events', 'Hide Labels', 'Hide All'], active = 0, background = '#6AD8DB', height_policy = "fit", min_width = 400)
 
 # ------link slider to graph
 slider.js_link("value", plot2.x_range, "start", attr_selector=0)
@@ -161,7 +186,7 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source=source4, axesSelect=
   source.change.emit()
   """))
 
-### Update VArea
+# ------Use JS to change 'active axis' to match selector value and update color for all varea glyphs
 axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = source4, glyphs = glyphs, palette = palette, axesSelect=axesSelect), code="""
   var xlist = [];
   var ylist = [];
@@ -283,7 +308,33 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, source2 =
   source.change.emit()
   """))
 
+# ------Use JS to change visibility of events to match radiobutton selection
 
+radio_button_group.js_on_click(CustomJS(args=dict(source = source3, EventSpans = EventSpans, EventLabels = EventLabels), code="""
+    if (this.active == 0){
+        console.log("First Button")
+        for (var i = 0; i < EventSpans.length; i++){
+            EventSpans[i].line_alpha = 1};
+        for (var i = 0; i < EventLabels.length; i++){
+            EventLabels[i].text_alpha = 1};  
+  
+    };
+    if (this.active == 1){
+        console.log("Second Button")
+        for (var i = 0; i < EventSpans.length; i++){
+            EventSpans[i].line_alpha = 1};
+        for (var i = 0; i < EventLabels.length; i++){
+            EventLabels[i].text_alpha = 0}; 
+    };
+    if (this.active ==2){
+        console.log("Third Button")
+        for (var i = 0; i < EventSpans.length; i++){
+            EventSpans[i].line_alpha = 0};
+        for (var i = 0; i < EventLabels.length; i++){
+            EventLabels[i].text_alpha = 0};
+    };
+    source.change.emit();
+"""))
 
 ### Update Names of graphs
 axesSelect.js_link('value', plot2.title, 'text')
@@ -291,9 +342,9 @@ axesSelect.js_link('value', plot2.title, 'text')
 axesSelect2.js_link('value', plot3.title, 'text')
 
 # ----plot slider
-show(layout(row(Div(text="<h1>U.S. Energy Comparison. Select and Compare:</h1>"), sizing_mode='stretch_width'), [slider, axesSelect, axesSelect2], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
+show(layout(row(Div(text="<h1>U.S. Energy Comparison. Select and Compare:</h1>"), sizing_mode='stretch_width'), [slider, axesSelect, axesSelect2, radio_button_group], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
 # while True:
 #     time.sleep(1)
 #     print("Y1: ", glyph.y1)
 #     print("Y2: ", glyph.y2)
-#print(len(source.data['Month']))
+print(source.data['Month'])
