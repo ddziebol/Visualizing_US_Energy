@@ -52,7 +52,7 @@ view4 = CDSView(source=source3)  # Plot1
 x = pd.to_datetime(cleaned_data.index, format="%b-%y").to_pydatetime()
 
 Default1 = "U.S. Crude Oil Production"
-Default2 = "U.S. Coal Consumption"
+Default2 = "U.S. Liquid Fuels Consumption"
 source.data['active_axis'] = source.data[Default1]  # sets appropriate defaults for plot1
 source2.data['active_axis'] = source.data[Default2]
 source3.data['active_axis'] = source.data["Change in "+Default1]  # sets appropriate defaults for plot1
@@ -73,7 +73,7 @@ linked_crosshair = CrosshairTool(dimensions="height")
 box_selector = BoxSelectTool()
 box_zoom = BoxZoomTool()
 #removed box_selector from list
-tools_to_show = ['box_zoom', hover, linked_crosshair,  'pan,save', 'reset']
+tools_to_show = ['box_zoom', box_selector, hover, linked_crosshair,  'pan,save', 'reset']
 toolbar_options=dict(logo='gray')
 
 # ----plot + line configuration:
@@ -112,13 +112,16 @@ SJP = Span(location = source.data['Month'][42], dimension='height', line_dash = 
 LJP = Label(x =source.data['Month'][42], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Jurassic Park Released", text_alpha = 1,  text_font_style = 'bold')
 
 S911 = Span(location = source.data['Month'][141], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
-L911 = Label(x =source.data['Month'][141], y = 0.14, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "9/11 Attacks", text_alpha = 1,  text_font_style = 'bold')
+L911 = Label(x =source.data['Month'][141], y = 0.13, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "9/11 Attacks", text_alpha = 1,  text_font_style = 'bold')
 
 SDotCom = Span(location = source.data['Month'][123], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
 LDotCom = Label(x =source.data['Month'][123], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Beginning of Dot Com crash", text_alpha = 1,  text_font_style = 'bold')
 
-EventSpans = [SCovid19, S2008, SUkrane, SJP, S911, SDotCom]
-EventLabels = [LCovid19, L2008, LUkrane, LJP, L911, LDotCom]
+SParis = Span(location = source.data['Month'][311], dimension='height', line_dash = 'dashed', line_width = 2, line_color = '#E00B9E', line_alpha = 1)
+LParis = Label(x =source.data['Month'][311], y = 0.1, x_offset = 2, y_offset = 2, text_font_size = '10pt', text = "Start of Paris Accord", text_alpha = 1,  text_font_style = 'bold')
+
+EventSpans = [SCovid19, S2008, SUkrane, SJP, S911, SDotCom, SParis]
+EventLabels = [LCovid19, L2008, LUkrane, LJP, L911, LDotCom, LParis]
 
 for i in range(len(EventSpans)):
     plot1.add_layout(EventSpans[i])
@@ -163,7 +166,7 @@ axesSelect = Select(title="Y-Axis:", value=Default1, options=columns, background
 
 axesSelect2 = Select(title="Y-Axis2:", value=Default2, options=columns, background='#848FF0')
 
-radio_button_group = RadioButtonGroup(labels = ['Show Events', 'Hide Labels', 'Hide All'], active = 0, background = '#6AD8DB', height_policy = "fit", min_width = 400)
+radio_button_group = RadioButtonGroup(labels = ['Show Events', 'Hide Labels', 'Hide All'], active = 0, background ="#6AD8DB", sizing_mode = "stretch_both")
 
 # ------link slider to graph
 slider.js_link("value", plot2.x_range, "start", attr_selector=0)
@@ -349,4 +352,4 @@ axesSelect2.js_link('value', plot3.title, 'text')
 #
 
 # ----plot slider
-show(layout(row(Div(text="<h1>U.S. Energy Trends: Select, Zoom, Explore</h1>"), sizing_mode='stretch_width'), [slider, axesSelect, axesSelect2, radio_button_group], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
+show(layout(row(Div(text="<h1>U.S. Energy Trends: Select, Zoom, Explore</h1>"), sizing_mode='stretch_width'), [axesSelect, axesSelect2,slider, radio_button_group], gridplot([[plot1], [plot2], [plot3]], toolbar_options=dict(logo='grey'))))
