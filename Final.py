@@ -6,9 +6,11 @@ Created on Sun Apr 10 14:16:55 2022
 import time
 import pandas as pd
 import colorcet as cc
+import numpy as np
 import datetime as dt
 from bokeh.io import show, curdoc
 from bokeh.plotting import figure
+from bokeh.themes import built_in_themes
 from bokeh.layouts import layout, column, gridplot, row
 from bokeh.models import CustomJS, ColumnDataSource, CDSView, DateRangeSlider, Select, BoxSelectTool, HoverTool, \
     CrosshairTool, VArea, Patch, Patches, BoxZoomTool, Div, HArea, IndexFilter, ColorBar, Span, Label, RadioButtonGroup
@@ -39,6 +41,7 @@ columns_change = sorted(cleaned_data.columns[18:])
 cleaned_data['active_axis'] = cleaned_data['U.S. Crude Oil Production'] #This gives all graphs same starting values
 cleaned_data['Month'] = pd.to_datetime(cleaned_data.index, format="%b-%y")
 cleaned_data['formattedMonth'] = cleaned_data['Month'].dt.strftime('%B %Y')
+cleaned_data['Cor'] = '' #Empty column to be filled with correlaiton values in JS callbacks.
 
 source = ColumnDataSource(data=cleaned_data)  # Plot2 -> 3
 source2 = ColumnDataSource(data=cleaned_data)  # Plot3 -> 4
@@ -66,6 +69,7 @@ hover = HoverTool(
     tooltips=[
         ('Date', '@formattedMonth'),
         ('y', '@active_axis{0.000 a}'),
+        ('Correlation', '@Cor')
     ],
 )
 linked_crosshair = CrosshairTool(dimensions="height")
@@ -81,20 +85,24 @@ width = 1500
 height1 = 400
 height2 = 200
 
-plot1 = figure(x_axis_type="datetime", width=width, height=height1, tools=tools_to_show, title="Percent Change", title_location='left')
+#curdoc().theme = 'dark_minimal'
 
-plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=1.0, source=source3, view=view3, color='orange')
+plot1 = figure(x_axis_type="datetime", width=width, height=height1, tools=tools_to_show, title="Percent Change", title_location='above')
 
-plot1.line(x='Month', y='active_axis', line_width=1, line_alpha=0.5, source=source4, view=view4, color='blue')
+plot1.line(x='Month', y='active_axis', line_width=1.5, line_alpha=0.8, source=source3, view=view3, color='orange')
+
+plot1.line(x='Month', y='active_axis', line_width=1.5, line_alpha=0.8, source=source4, view=view4, color='blue')
+
+#plot1.background_fill_color = '#F1E8E8'
 
 
-plot2 = figure(x_axis_type="datetime", width=width, height=height2, tools=tools_to_show, title=Default1, title_location='left')
+plot2 = figure(x_axis_type="datetime", width=width, height=height2, tools=tools_to_show, title=Default1, title_location='above')
 
-plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source, view=view, color='orange')
+plot2.line(x='Month', y='active_axis', line_width=3, line_alpha=1.0, source=source, view=view, color='orange')
 
-plot3 = figure(x_axis_type="datetime", width=width, height=height2, tools=tools_to_show, title=Default2, title_location='left')
+plot3 = figure(x_axis_type="datetime", width=width, height=height2, tools=tools_to_show, title=Default2, title_location='above')
 
-plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=0.5, source=source2, view=view2,  color='blue')
+plot3.line(x='Month', y='active_axis', line_width=3, line_alpha=1.0, source=source2, view=view2,  color='blue')
 
 plot1.x_range = plot2.x_range = plot3.x_range  # Links x range of graphs when manipulated by zoom or pan
 
@@ -200,7 +208,7 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = 
   var ylist = [];
   var fullx = source.data['active_axis'].filter(Boolean); //remove nan 
   var fully = source2.data['active_axis'].filter(Boolean); //remove nan
-  
+    
   console.log("Length of first source: ")
   console.log(fullx.length)
   console.log("second source: ")
@@ -244,15 +252,18 @@ axesSelect.js_on_change('value', CustomJS(args=dict(source = source3, source2 = 
       const cornom = xnorm.reduce(function(r,a,i){return r+a*ynorm[i]},0);
       const cordenom = Math.sqrt(xnormsqsum * ynromsqsum);
       const cor = cornom/cordenom
-      
-      console.log(cor, " Index: ", i, "Length of Glyphs: ", glyphs.length, "Pallet: ", parseInt(((cor + 1) * 200) / 2));
-      
+         
+      source.data['Cor'][glyphs.length - 1 - i] = cor
+      source2.data['Cor'][glyphs.length - 1 - i] = cor
       glyphs[glyphs.length - 1 - i].fill_color = palette[parseInt(((cor + 1) * 200) / 2)]
+      
+      console.log(cor, "month: ", source.data["Month"][glyphs.length - 1 - i], "Cor: ",source.data['Cor'][glyphs.length - 1 - i], );
   }
   for (var i = 0; i < glyphs.length; i++){
       glyphs[i].y1.field = "Change in " + axesSelect.value;
   };
   source.change.emit()
+  source2.change.emit()
   """))
 
 axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, source2 = source4, glyphs = glyphs, palette = palette, axesSelect=axesSelect2), code="""
@@ -306,7 +317,8 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, source2 =
       const cor = cornom/cordenom
       
       console.log(cor, " Index: ", i, "Length of Glyphs: ", glyphs.length, "Pallet: ", parseInt(((cor + 1) * 200) / 2));
-      
+      source.data['Cor'][glyphs.length - 1 - i] = cor
+      source2.data['Cor'][glyphs.length - 1 - i] = cor
       glyphs[glyphs.length - 1 - i].fill_color = palette[parseInt(((cor + 1) * 200) / 2)]
   }
   for (var i = 0; i < glyphs.length; i++){
@@ -314,6 +326,7 @@ axesSelect2.js_on_change('value', CustomJS(args=dict(source = source3, source2 =
       //glyphs[i].fill_color = palette[Math.floor(Math.random()*101)]
   }
   source.change.emit()
+  source2.change.emit()
   """))
 
 # ------Use JS to change visibility of events to match radiobutton selection
@@ -346,7 +359,6 @@ radio_button_group.js_on_click(CustomJS(args=dict(source = source3, EventSpans =
 
 ### Update Names of graphs
 axesSelect.js_link('value', plot2.title, 'text')
-
 axesSelect2.js_link('value', plot3.title, 'text')
 
 #
